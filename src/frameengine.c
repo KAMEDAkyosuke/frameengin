@@ -342,7 +342,7 @@ static int tcp_read(FE_tcp_context *ctx)
                     continue;
                     break;
                 case EAGAIN:    // ブロックが発生した場合
-                    return FE_result_again;
+                    return FE_result_ok;
                     break;
                 default:
                     printf("errno = %d\n", err);
@@ -373,7 +373,7 @@ static int udp_read_ipv4(FE_udp_context *ctx)
                     continue;
                     break;
                 case EAGAIN:    // ブロックが発生した場合
-                    return FE_result_again;
+                    return FE_result_ok;
                     break;
                 default:
                     printf("errno = %d\n", err);
