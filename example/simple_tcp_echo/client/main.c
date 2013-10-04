@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     
     for(;;){
         int r = FE_tcp_read_block(&ctx, &timeout);
-        if(r == FE_result_ok || r == FE_result_again || r == FE_result_closed){
+        if(r == FE_result_ok || r == FE_result_closed){
             break;
         }
         else{
