@@ -16,7 +16,6 @@
 extern int FE_result_ok;
 extern int FE_result_timeout;
 extern int FE_result_closed;
-extern int FE_result_again;
 
 typedef struct FE_tcp_context{
     int socket;

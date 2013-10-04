@@ -24,7 +24,6 @@
 int FE_result_ok      =  0;
 int FE_result_timeout = -1;
 int FE_result_closed  = -2;
-int FE_result_again   = -3;
 
 static int tcp_read(FE_tcp_context *ctx);
 static int udp_read_ipv4(FE_udp_context *ctx);
