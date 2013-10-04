@@ -1,11 +1,9 @@
-//
 //  frameengine.c
 //  FrameEngine
 //
 //  Created by organlounge on 2013/10/02.
 //  Copyright (c) 2013年 organlounge. All rights reserved.
 //
-
 
 #include "frameengine.h"
 
@@ -196,7 +194,6 @@ int FE_tcp_read_block(FE_tcp_context *ctx, struct timeval *timeout)
 int FE_tcp_close(FE_tcp_context *ctx)
 {
     if(close(ctx->socket) != 0){
-        err = errno;
         perror("close fail");
     }
     return FE_result_ok;
@@ -321,7 +318,6 @@ int FE_udp_read_block_ipv4(FE_udp_context *ctx, struct timeval *timeout)
 int FE_udp_close(FE_udp_context *ctx)
 {
     if(close(ctx->socket) != 0){
-        err = errno;
         perror("close fail");
     }
     return FE_result_ok;

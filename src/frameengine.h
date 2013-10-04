@@ -10,6 +10,8 @@
 #define FrameEngine_frameengine_h
 
 #include <stdint.h>
+#include <sys/types.h>
+#include <sys/time.h>
 
 extern int FE_result_ok;
 extern int FE_result_timeout;
@@ -57,6 +59,6 @@ int FE_udp_init_ipv4(FE_udp_context *ctx);
 int FE_udp_write_ipv4(FE_udp_context *ctx, int8_t *buf, int bytes);
 int FE_udp_read_ipv4(FE_udp_context *ctx);
 int FE_udp_read_block_ipv4(FE_udp_context *ctx, struct timeval *timeout);
-int FE_udp_close(FE_tcp_context *ctx);
+int FE_udp_close(FE_udp_context *ctx);
 
 #endif
