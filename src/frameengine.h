@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <netinet/in.h>
 
 extern int FE_result_ok;
 extern int FE_result_timeout;
@@ -49,7 +50,8 @@ typedef struct FE_udp_context{
     
     // callbacks
     void(*on_read_timeout)(struct FE_udp_context *ctx);
-    void(*on_read)(struct FE_udp_context *ctx, int8_t *buf, ssize_t len, uint16_t local_port);
+    void(*on_read)(struct FE_udp_context *ctx, int8_t *buf, ssize_t len,
+                   uint16_t local_port, struct sockaddr_in *target_sin);
     
     void *data;
 } FE_udp_context;

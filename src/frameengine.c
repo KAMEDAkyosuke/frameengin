@@ -380,10 +380,6 @@ static int udp_read_ipv4(FE_udp_context *ctx)
             }
         }
         
-        // host : port の付け替えを行う。
-        ctx->target_port = sin.sin_port;
-        ctx->target_ipv4 = sin.sin_addr.s_addr;
-        
         struct sockaddr_in sin;
         socklen_t len = sizeof(sin);
         if(getsockname(ctx->socket, (struct sockaddr *) &sin, &len) != 0){
@@ -392,7 +388,7 @@ static int udp_read_ipv4(FE_udp_context *ctx)
         }
         ctx->local_port = sin.sin_port;
         if(ctx->on_read != NULL){
-            ctx->on_read(ctx, buf, ret, ctx->local_port);
+            ctx->on_read(ctx, buf, ret, ctx->local_port, &sin);
         }
     }
     return FE_result_ok;
