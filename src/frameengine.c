@@ -193,6 +193,15 @@ int FE_tcp_read_block(FE_tcp_context *ctx, struct timeval *timeout)
     return FE_result_ok;
 }
 
+int FE_tcp_close(FE_tcp_context *ctx)
+{
+    if(close(ctx->socket) != 0){
+        err = errno;
+        perror("close fail");
+    }
+    return FE_result_ok;
+}
+
 int FE_udp_init_ipv4(FE_udp_context *ctx)
 {
     ctx->local_port = 0;
@@ -308,6 +317,16 @@ int FE_udp_read_block_ipv4(FE_udp_context *ctx, struct timeval *timeout)
     }
     return FE_result_ok;
 }
+
+int FE_udp_close(FE_udp_context *ctx)
+{
+    if(close(ctx->socket) != 0){
+        err = errno;
+        perror("close fail");
+    }
+    return FE_result_ok;
+}
+
 
 static int tcp_read(FE_tcp_context *ctx)
 {

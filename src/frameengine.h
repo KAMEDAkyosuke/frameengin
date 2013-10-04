@@ -37,6 +37,7 @@ int FE_tcp_connect_ipv4(FE_tcp_context *ctx, struct timeval *timeout);
 int FE_tcp_write(FE_tcp_context *ctx, int8_t *buf, int bytes);
 int FE_tcp_read(FE_tcp_context *ctx);
 int FE_tcp_read_block(FE_tcp_context *ctx, struct timeval *timeout);
+int FE_tcp_close(FE_tcp_context *ctx);
 
 typedef struct FE_udp_context{
     int socket;
@@ -56,5 +57,6 @@ int FE_udp_init_ipv4(FE_udp_context *ctx);
 int FE_udp_write_ipv4(FE_udp_context *ctx, int8_t *buf, int bytes);
 int FE_udp_read_ipv4(FE_udp_context *ctx);
 int FE_udp_read_block_ipv4(FE_udp_context *ctx, struct timeval *timeout);
+int FE_udp_close(FE_tcp_context *ctx);
 
 #endif
