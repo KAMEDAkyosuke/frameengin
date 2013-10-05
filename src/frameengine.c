@@ -26,6 +26,7 @@ int FE_result_timeout = -1;
 int FE_result_closed  = -2;
 
 static int tcp_read(FE_tcp_context *ctx);
+static int tcp_recv_msg(FE_tcp_context *ctx);
 static int udp_read_ipv4(FE_udp_context *ctx);
 
 int FE_tcp_init_ipv4(FE_tcp_context *ctx)
@@ -152,7 +153,7 @@ int FE_tcp_write(FE_tcp_context *ctx, int8_t *buf, int bytes)
         write_len += ret;
         buf += ret;
     }
-    return bytes;
+    return write_len;
 }
 
 int FE_tcp_read(FE_tcp_context *ctx)
@@ -182,6 +183,88 @@ int FE_tcp_read_block(FE_tcp_context *ctx, struct timeval *timeout)
     else{
         if(FD_ISSET(ctx->socket, &readfds)){
             return tcp_read(ctx);
+        }
+        else{
+            assert(false);
+        }
+    }
+    return FE_result_ok;
+}
+
+int FE_tcp_send_msg(FE_tcp_context *ctx, int8_t *buf, int bytes)
+{
+    ssize_t ret;
+    int write_len = 0;
+    int err;
+    for(;;){
+        if(bytes <= write_len){    // すべて書き込んだ場合
+            break;
+        }
+        struct iovec iov;
+        iov.iov_base = buf;
+        iov.iov_len  = bytes - write_len;
+        
+        struct msghdr msg;
+        msg.msg_name       = NULL;
+        msg.msg_namelen    = 0;
+        msg.msg_iov        = &iov;
+        msg.msg_iovlen     = 1;
+        msg.msg_control    = NULL;
+        msg.msg_controllen = 0;
+        msg.msg_flags      = 0;
+        
+        ret = sendmsg(ctx->socket, &msg, 0);
+        if(ret == -1){
+            err = errno;
+            perror("sendmsg fail");
+            switch (err) {
+            case EINTR:     // シグナルを検知した場合
+                continue;
+                break;
+            case EAGAIN:    // ブロックが発生した場合
+                return write_len;    // 今まで書き込んだ byte 数を返す
+                break;
+            case EPIPE:     // 読み取り側がクローズした場合
+                return FE_result_closed;
+                break;
+            default:
+                printf("errno = %d\n", err);
+                assert(false);
+            }
+        }
+        write_len += ret;
+        buf += ret;
+    }
+    return write_len;
+}
+
+int FE_tcp_recv_msg(FE_tcp_context *ctx)
+{
+    return tcp_recv_msg(ctx);
+}
+
+int FE_tcp_recv_msg_block(FE_tcp_context *ctx, struct timeval *timeout)
+{
+   int r;
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(ctx->socket, &readfds);
+    
+    r = select(ctx->socket + 1, &readfds, NULL, NULL, timeout);
+    if(r == 0){    // timeout
+        if(ctx->on_read_timeout != NULL){
+            ctx->on_read_timeout(ctx);
+        }
+        return FE_result_timeout;
+    }
+    else if(r == -1){
+        int err = errno;
+        printf("errno = %d\n", err);
+        assert(false);
+    }
+    else{
+        if(FD_ISSET(ctx->socket, &readfds)){
+            return tcp_recv_msg(ctx);
         }
         else{
             assert(false);
@@ -350,6 +433,54 @@ static int tcp_read(FE_tcp_context *ctx)
         }
         if(ctx->on_read != NULL){
             ctx->on_read(ctx, buf, ret);
+        }
+    }
+    return FE_result_ok;
+}
+
+static int tcp_recv_msg(FE_tcp_context *ctx)
+{
+    ssize_t ret;
+    static int8_t buf[4096];
+    static struct iovec iov;
+    static struct msghdr msg;
+    int err;
+    for(;;){
+        iov.iov_base = buf;
+        iov.iov_len  = sizeof(buf)/sizeof(buf[0]);
+
+        msg.msg_name       = NULL;
+        msg.msg_namelen    = 0;
+        msg.msg_iov        = &iov;
+        msg.msg_iovlen     = 1;
+        msg.msg_control    = NULL;
+        msg.msg_controllen = 0;
+        msg.msg_flags      = 0;
+        
+        ret = recvmsg(ctx->socket, &msg, 0);
+        if(ret == 0){    // ソケットがクローズされた場合
+            return FE_result_closed;
+        }
+        else if(ret == -1){
+            err = errno;
+            perror("recvmsg fail");
+            switch (err) {
+                case EINTR:     // シグナルを検知した場合
+                    continue;
+                    break;
+                case EAGAIN:    // ブロックが発生した場合
+                    return FE_result_ok;
+                    break;
+                default:
+                    printf("errno = %d\n", err);
+                    assert(false);
+            }
+        }
+
+        // TODO:
+        // check msg.msg_flags
+        if(ctx->on_read != NULL){
+            ctx->on_read(ctx, iov.iov_base, ret);
         }
     }
     return FE_result_ok;
