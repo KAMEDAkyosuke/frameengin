@@ -63,4 +63,9 @@ static void on_read(struct FE_udp_context *ctx, int8_t *buf, ssize_t len,
     char s[1024] = {0};
     memcpy(s, buf, sizeof(int8_t)*len);
     puts(s);
+
+    printf("local port = %u\n",  ntohs(local_port));
+    printf("target host = %s\n", inet_ntoa(target_sin->sin_addr));
+    printf("target port = %u\n", ntohs(target_sin->sin_port));
+
 }
