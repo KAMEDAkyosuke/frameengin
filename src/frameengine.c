@@ -598,13 +598,13 @@ static int udp_read_ipv4(FE_udp_context *ctx)
             }
         }
         
-        struct sockaddr_in sin;
-        socklen_t len = sizeof(sin);
-        if(getsockname(ctx->socket, (struct sockaddr *) &sin, &len) != 0){
+        struct sockaddr_in local;
+        socklen_t len = sizeof(local);
+        if(getsockname(ctx->socket, (struct sockaddr *) &local, &len) != 0){
             perror("getsockname failed");
             assert(false);
         }
-        ctx->local_port = sin.sin_port;
+        ctx->local_port = local.sin_port;
         if(ctx->on_read != NULL){
             ctx->on_read(ctx, buf, ret, ctx->local_port, &sin);
         }
@@ -654,7 +654,6 @@ static int udp_recv_msg_ipv4(FE_udp_context *ctx)
 
         // TODO:
         // check msg.msg_flags
-
         struct sockaddr_in sin;
         socklen_t len = sizeof(sin);
         if(getsockname(ctx->socket, (struct sockaddr *) &sin, &len) != 0){
