@@ -87,7 +87,6 @@ reconnect:
         perror("connect fail");
         switch(err){
             case EISCONN:    /* connected */
-            case EALREADY:
                 puts("connected");
                 struct sockaddr_in sin;
                 socklen_t len = sizeof(sin);
@@ -101,6 +100,7 @@ reconnect:
                 }
                 break;
             case EINPROGRESS:
+            case EALREADY:
             {
                 /* sleep */
                 select(0, NULL, NULL, NULL, &tv);
