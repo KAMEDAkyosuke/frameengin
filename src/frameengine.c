@@ -32,8 +32,6 @@ static int udp_recv_msg_ipv4(FE_udp_context *ctx);
 
 int FE_tcp_init_ipv4(FE_tcp_context *ctx)
 {
-    ctx->local_port = 0;
-    
     ctx->target_ipv4 = 0;
     ctx->target_port = 0;
     
@@ -76,7 +74,7 @@ int FE_tcp_connect_ipv4(FE_tcp_context *ctx, struct timeval *timeout)
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = ctx->target_ipv4;
-    sin.sin_port = ctx->target_port;
+    sin.sin_port        = htons(ctx->target_port);
     
     struct timeval tv;
     tv.tv_sec = 0;
@@ -87,6 +85,7 @@ reconnect:
         perror("connect fail");
         switch(err){
             case EISCONN:    /* connected */
+            case ECONNREFUSED:
                 puts("connected");
                 struct sockaddr_in sin;
                 socklen_t len = sizeof(sin);
@@ -94,9 +93,8 @@ reconnect:
                     perror("getsockname failed");
                     assert(false);
                 }
-                ctx->local_port = sin.sin_port;
                 if(ctx->on_connect != NULL){
-                    ctx->on_connect(ctx, ctx->local_port);
+                    ctx->on_connect(ctx, ntohs(sin.sin_port));
                 }
                 break;
             case EINPROGRESS:
@@ -284,8 +282,6 @@ int FE_tcp_close(FE_tcp_context *ctx)
 
 int FE_udp_init_ipv4(FE_udp_context *ctx)
 {
-    ctx->local_port = 0;
-
     ctx->target_ipv4 = 0;
     ctx->target_port = 0;
 
@@ -325,7 +321,7 @@ int FE_udp_write_ipv4(FE_udp_context *ctx, int8_t *buf, int bytes)
     struct sockaddr_in addr;
     addr.sin_family      = AF_INET;
     addr.sin_addr.s_addr = ctx->target_ipv4;
-    addr.sin_port        = ctx->target_port;
+    addr.sin_port        = htons(ctx->target_port);
     
     ssize_t ret;
     int write_len = 0;
@@ -403,7 +399,7 @@ int FE_udp_send_msg_ipv4(FE_udp_context *ctx, int8_t *buf, int bytes)
     struct sockaddr_in addr;
     addr.sin_family      = AF_INET;
     addr.sin_addr.s_addr = ctx->target_ipv4;
-    addr.sin_port        = ctx->target_port;
+    addr.sin_port        = htons(ctx->target_port);
 
     ssize_t ret;
     int write_len = 0;
@@ -513,6 +509,9 @@ static int tcp_read(FE_tcp_context *ctx)
                 case EAGAIN:    // ブロックが発生した場合
                     return FE_result_ok;
                     break;
+                case ECONNRESET:
+                    return FE_result_closed;
+                    break;
                 default:
                     printf("errno = %d\n", err);
                     assert(false);
@@ -557,6 +556,9 @@ static int tcp_recv_msg(FE_tcp_context *ctx)
                     break;
                 case EAGAIN:    // ブロックが発生した場合
                     return FE_result_ok;
+                    break;
+                case ECONNRESET:
+                    return FE_result_closed;
                     break;
                 default:
                     printf("errno = %d\n", err);
@@ -604,9 +606,8 @@ static int udp_read_ipv4(FE_udp_context *ctx)
             perror("getsockname failed");
             assert(false);
         }
-        ctx->local_port = local.sin_port;
         if(ctx->on_read != NULL){
-            ctx->on_read(ctx, buf, ret, ctx->local_port, &sin);
+            ctx->on_read(ctx, buf, ret, ntohs(local.sin_port), &sin);
         }
     }
     return FE_result_ok;
@@ -660,9 +661,8 @@ static int udp_recv_msg_ipv4(FE_udp_context *ctx)
             perror("getsockname failed");
             assert(false);
         }
-        ctx->local_port = sin.sin_port;
         if(ctx->on_read != NULL){
-            ctx->on_read(ctx, iov.iov_base, ret, ctx->local_port, msg.msg_name);
+            ctx->on_read(ctx, iov.iov_base, ret, ntohs(sin.sin_port), msg.msg_name);
         }
     }
     return FE_result_ok;

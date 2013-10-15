@@ -20,8 +20,6 @@ extern int FE_result_closed;
 
 typedef struct FE_tcp_context{
     int socket;
-    uint16_t  local_port;
-    
     in_addr_t target_ipv4;
     uint16_t  target_port;
     
@@ -49,8 +47,6 @@ int FE_tcp_close(FE_tcp_context *ctx);
 
 typedef struct FE_udp_context{
     int socket;
-    uint16_t  local_port;
-    
     in_addr_t target_ipv4;
     uint16_t  target_port;
     
